@@ -1,0 +1,22 @@
+{
+  "private": true,
+  "version": "0.0.0",
+  "dependencies": {
+    "@types/koa-bodyparser": "^4.3.0",
+    "dotenv-flow": "^3.1.0",
+    "koa": "^2.11.0",
+    "koa-bodyparser": "^4.2.1",
+    "koa-router": "^8.0.6",
+    "typescript": "^3.7.5"
+  },
+  "devDependencies": {
+    "@types/dotenv-flow": "^3.0.0",
+    "@types/koa": "^2.11.0",
+    "@types/koa-router": "^7.4.0",
+    "ts-node-dev": "^1.0.0-pre.44"
+  },
+  "scripts": {
+    "serve": "ts-node-dev index.ts",
+    "build": "tsc"
+  }
+}

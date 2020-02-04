@@ -1,0 +1,8 @@
+FROM node:lts
+COPY package*.json tsconfig.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+EXPOSE 80
+CMD ["npx", "serve", "dist", "-l", "80"]

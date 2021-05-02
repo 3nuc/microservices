@@ -228,7 +228,8 @@
         "CidrBlock": "10.0.0.0/24",
         "AvailabilityZone": {
           "Fn::Select": ["0", {"Fn::GetAZs": ""}]
-        }
+        },
+        "MapPublicIpOnLaunch": true
       }
     },
     "PublicSubnetTwo": {
@@ -238,7 +239,8 @@
         "CidrBlock": "10.0.1.0/24",
         "AvailabilityZone": {
           "Fn::Select": ["1", {"Fn::GetAZs": ""}]
-        }
+        },
+        "MapPublicIpOnLaunch": true
       }
     },
     "PublicRouteTable": {
@@ -267,6 +269,21 @@
       "Properties": {
         "SubnetId": {"Ref": "PublicSubnetTwo"},
         "RouteTableId": {"Ref": "PublicRouteTable"}
+      }
+    },
+    "NatGateway": {
+      "Type": "AWS::EC2::NatGateway",
+      "DependsOn": "NatPublicIP",
+      "Properties": {
+        "SubnetId": {"Ref": "PublicSubnetOne"},
+        "AllocationId": {"Fn::GetAtt": ["NatPublicIP", "AllocationId"]}
+      }
+    },
+    "NatPublicIP": {
+      "Type": "AWS::EC2::EIP",
+      "DependsOn": "VPC",
+      "Properties": {
+        "Domain": "vpc"
       }
     },
     "NotificationTopic": {

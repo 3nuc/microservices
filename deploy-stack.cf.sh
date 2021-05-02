@@ -4,7 +4,7 @@ CLI_PROFILE=default
 STACK_NAME=rownolegle
 
 REGION=eu-central-1
-EC2_INSTANCE_TYPE=t2.nano #cheapest i think
+EC2_INSTANCE_TYPE=t3.nano #cheapest i think
 
 #go to https://eu-central-1.console.aws.amazon.com/vpc/home?region=eu-central-1#vpcs:
 VPC_ID=vpc-74f9131e
@@ -24,8 +24,6 @@ aws cloudformation deploy \
   --no-fail-on-empty-changeset \
   --capabilities CAPABILITY_NAMED_IAM \
   --parameter-overrides \
-    VpcId=$VPC_ID \
-    Subnets="$SUBNET1,$SUBNET2" \
     InstanceType=$EC2_INSTANCE_TYPE \
     OperatorEMail=$OPERATOR_EMAIL \
     KeyName=$KEY_NAME \

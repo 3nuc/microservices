@@ -4,24 +4,11 @@
   "Description" : "AWS CloudFormation Sample Template AutoScalingMultiAZWithNotifications: Create a multi-az, load balanced and Auto Scaled sample web site running on an Apache Web Serever. The application is configured to span all Availability Zones in the region and is Auto-Scaled based on the CPU utilization of the web servers. Notifications will be sent to the operator email address on scaling events. The instances are load balanced with a simple health check against the default web page. **WARNING** This template creates one or more Amazon EC2 instances and an Application Load Balancer. You will be billed for the AWS resources used if you create a stack from this template.",
 
   "Parameters" : {
-
-    "VpcId" : {
-      "Type" : "AWS::EC2::VPC::Id",
-      "Description" : "VpcId of your existing Virtual Private Cloud (VPC)",
-      "ConstraintDescription" : "must be the VPC Id of an existing Virtual Private Cloud."
-    },
-
-    "Subnets" : {
-      "Type" : "List<AWS::EC2::Subnet::Id>",
-      "Description" : "The list of SubnetIds in your Virtual Private Cloud (VPC)",
-      "ConstraintDescription" : "must be a list of at least two existing subnets associated with at least two different availability zones. They should be residing in the selected Virtual Private Cloud."
-    },
-
     "InstanceType" : {
       "Description" : "WebServer EC2 instance type",
       "Type" : "String",
       "Default" : "t2.small",
-      "AllowedValues" : [ "t1.micro", "t2.nano", "t2.micro", "t2.small", "t2.medium", "t2.large", "m1.small", "m1.medium", "m1.large", "m1.xlarge", "m2.xlarge", "m2.2xlarge", "m2.4xlarge", "m3.medium", "m3.large", "m3.xlarge", "m3.2xlarge", "m4.large", "m4.xlarge", "m4.2xlarge", "m4.4xlarge", "m4.10xlarge", "c1.medium", "c1.xlarge", "c3.large", "c3.xlarge", "c3.2xlarge", "c3.4xlarge", "c3.8xlarge", "c4.large", "c4.xlarge", "c4.2xlarge", "c4.4xlarge", "c4.8xlarge", "g2.2xlarge", "g2.8xlarge", "r3.large", "r3.xlarge", "r3.2xlarge", "r3.4xlarge", "r3.8xlarge", "i2.xlarge", "i2.2xlarge", "i2.4xlarge", "i2.8xlarge", "d2.xlarge", "d2.2xlarge", "d2.4xlarge", "d2.8xlarge", "hi1.4xlarge", "hs1.8xlarge", "cr1.8xlarge", "cc2.8xlarge", "cg1.4xlarge"]
+      "AllowedValues" : [ "t1.micro", "t2.nano", "t3.nano", "t2.micro", "t2.small", "t2.medium", "t2.large", "m1.small", "m1.medium", "m1.large", "m1.xlarge", "m2.xlarge", "m2.2xlarge", "m2.4xlarge", "m3.medium", "m3.large", "m3.xlarge", "m3.2xlarge", "m4.large", "m4.xlarge", "m4.2xlarge", "m4.4xlarge", "m4.10xlarge", "c1.medium", "c1.xlarge", "c3.large", "c3.xlarge", "c3.2xlarge", "c3.4xlarge", "c3.8xlarge", "c4.large", "c4.xlarge", "c4.2xlarge", "c4.4xlarge", "c4.8xlarge", "g2.2xlarge", "g2.8xlarge", "r3.large", "r3.xlarge", "r3.2xlarge", "r3.4xlarge", "r3.8xlarge", "i2.xlarge", "i2.2xlarge", "i2.4xlarge", "i2.8xlarge", "d2.xlarge", "d2.2xlarge", "d2.4xlarge", "d2.8xlarge", "hi1.4xlarge", "hs1.8xlarge", "cr1.8xlarge", "cc2.8xlarge", "cg1.4xlarge"]
 ,
       "ConstraintDescription" : "must be a valid EC2 instance type."
     },
@@ -78,6 +65,7 @@
     "AWSInstanceType2Arch" : {
       "t1.micro"    : { "Arch" : "HVM64"  },
       "t2.nano"     : { "Arch" : "HVM64"  },
+      "t3.nano"     : { "Arch" : "HVM64"  },
       "t2.micro"    : { "Arch" : "HVM64"  },
       "t2.small"    : { "Arch" : "HVM64"  },
       "t2.medium"   : { "Arch" : "HVM64"  },
@@ -216,6 +204,47 @@
   },
 
   "Resources" : {
+    "VPC": {
+      "Type": "AWS::EC2::VPC",
+      "Properties": {
+        "CidrBlock": "10.0.0.0/16",
+        "EnableDnsHostnames": true
+      }
+    },
+    "InternetGateway": {
+      "Type": "AWS::EC2::InternetGateway"
+    },
+    "AttachGateway": {
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "InternetGatewayId": {
+          "Ref": "InternetGateway"
+        }
+      }
+    },
+    "PublicSubnetOne": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {"Ref": "VPC"},
+        "CidrBlock": "10.0.0.0/24",
+        "AvailabilityZone": {
+          "Fn::Select": ["0", {"Fn::GetAZs": ""}]
+        }
+      }
+    },
+    "PublicSubnetTwo": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {"Ref": "VPC"},
+        "CidrBlock": "10.0.1.0/24",
+        "AvailabilityZone": {
+          "Fn::Select": ["1", {"Fn::GetAZs": ""}]
+        }
+      }
+    },
     "NotificationTopic": {
       "Type": "AWS::SNS::Topic",
       "Properties": {
@@ -226,7 +255,7 @@
     "WebServerGroup" : {
       "Type" : "AWS::AutoScaling::AutoScalingGroup",
       "Properties" : {
-        "VPCZoneIdentifier" : { "Ref" : "Subnets" },
+        "VPCZoneIdentifier" : [{"Ref": "PublicSubnetOne"}, {"Ref": "PublicSubnetTwo"}],
         "LaunchConfigurationName" : { "Ref" : "LaunchConfig" },
         "MinSize" : "1",
         "MaxSize" : "3",
@@ -254,7 +283,6 @@
         }
       }
     },
-
     "LaunchConfig" : {
       "Type" : "AWS::AutoScaling::LaunchConfiguration",
       "Metadata" : {
@@ -404,7 +432,7 @@
     "ApplicationLoadBalancer" : {
       "Type" : "AWS::ElasticLoadBalancingV2::LoadBalancer",
       "Properties" : {
-        "Subnets" : { "Ref" : "Subnets"}
+        "Subnets" : [{"Ref": "PublicSubnetOne"}, {"Ref": "PublicSubnetTwo"}]
       }
     },
 
@@ -430,7 +458,7 @@
         "Port" : 80,
         "Protocol" : "HTTP",
         "UnhealthyThresholdCount" : 5,
-        "VpcId" : {"Ref" : "VpcId"}
+        "VpcId" : {"Ref" : "VPC"}
       }
     },
 
@@ -450,7 +478,7 @@
           "ToPort" : "80",
           "SourceSecurityGroupId" : {"Fn::Select" : [0, {"Fn::GetAtt" : ["ApplicationLoadBalancer", "SecurityGroups"]}]}
         } ],
-        "VpcId" : { "Ref" : "VpcId" }
+        "VpcId" : { "Ref" : "VPC" }
       }
     }
   },

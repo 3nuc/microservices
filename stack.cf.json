@@ -473,7 +473,8 @@
     "ApplicationLoadBalancer" : {
       "Type" : "AWS::ElasticLoadBalancingV2::LoadBalancer",
       "Properties" : {
-        "Subnets" : [{"Ref": "PublicSubnetOne"}, {"Ref": "PublicSubnetTwo"}]
+        "Subnets" : [{"Ref": "PublicSubnetOne"}, {"Ref": "PublicSubnetTwo"}],
+        "SecurityGroups": [{"Ref": "InstanceSecurityGroup"}]
       }
     },
 
@@ -517,7 +518,7 @@
           "IpProtocol" : "tcp",
           "FromPort" : "80",
           "ToPort" : "80",
-          "SourceSecurityGroupId" : {"Fn::Select" : [0, {"Fn::GetAtt" : ["ApplicationLoadBalancer", "SecurityGroups"]}]}
+          "CidrIp" : { "Ref" : "SSHLocation"}
         } ],
         "VpcId" : { "Ref" : "VPC" }
       }
